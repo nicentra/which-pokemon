@@ -174,7 +174,7 @@ export default function Home() {
             }}
             disabled={isShowingAnswer}
           >
-            {`Obviously ${secondPokemon.name}`}
+            {`Obviously ${secondPokemon.name}!`}
           </button>
         </div>
       </div>
