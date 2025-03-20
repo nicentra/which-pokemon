@@ -1,103 +1,232 @@
-import Image from "next/image";
+'use client';
+
+import { Pokemon } from '@/types/pokemon';
+import { getPokemon } from '@/utils/axios';
+import { tryCatch } from '@/utils/try-catch';
+import { useState, useEffect } from 'react';
+import { PokemonCard } from '@/components/PokemonCard';
+
+type BaseStat =
+  | 'hp'
+  | 'attack'
+  | 'defense'
+  | 'specialAttack'
+  | 'specialDefense'
+  | 'speed'
+  | 'total';
+
+const baseStatToName = {
+  hp: 'HP',
+  attack: 'Attack',
+  defense: 'Defense',
+  specialAttack: 'Special Attack',
+  specialDefense: 'Special Defense',
+  speed: 'Speed',
+  total: 'Base Stat Total',
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [firstPokemon, setFirstPokemon] = useState<Pokemon>();
+  const [secondPokemon, setSecondPokemon] = useState<Pokemon>();
+  const [nextPokemon, setNextPokemon] = useState<Pokemon[]>([]);
+  const [guessedPokemon, setGuessedPokemon] = useState<Pokemon>();
+  const [correctPokemon, setCorrectPokemon] = useState<Pokemon>();
+  const [incorrectPokemon, setIncorrectPokemon] = useState<Pokemon>();
+  const [baseStatToCompare, setBaseStatToCompare] = useState<BaseStat>();
+  const [isShowingAnswer, setIsShowingAnswer] = useState<boolean>(false);
+  const [correctGuesses, setCorrectGuesses] = useState<number>(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  function getTwoRandonmNumbers(min: number, max: number) {
+    const firstNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    const secondNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return { firstNumber, secondNumber };
+  }
+
+  async function getTwoRandomPokemon() {
+    const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
+    const firstPokemon = await tryCatch(getPokemon(firstNumber));
+    const secondPokemon = await tryCatch(getPokemon(secondNumber));
+    if (firstPokemon.error || secondPokemon.error) {
+      console.error(firstPokemon.error, secondPokemon.error);
+      throw new Error('Error fetching pokemon');
+    }
+    setFirstPokemon(firstPokemon.data);
+    setSecondPokemon(secondPokemon.data);
+  }
+
+  async function getNextPokemon() {
+    const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
+    const firstPokemon = await tryCatch(getPokemon(firstNumber));
+    const secondPokemon = await tryCatch(getPokemon(secondNumber));
+    if (firstPokemon.error || secondPokemon.error) {
+      console.error(firstPokemon.error, secondPokemon.error);
+      throw new Error('Error fetching pokemon');
+    }
+    setNextPokemon([firstPokemon.data, secondPokemon.data]);
+  }
+
+  async function resetGame() {
+    setCorrectGuesses(0);
+    setIsShowingAnswer(false);
+    setGuessedPokemon(undefined);
+    setCorrectPokemon(undefined);
+    setIncorrectPokemon(undefined);
+    setFirstPokemon(nextPokemon[0]);
+    setSecondPokemon(nextPokemon[1]);
+    getNextPokemon();
+    const baseStat = selectBaseStatToCompare();
+    setBaseStatToCompare(baseStat);
+  }
+
+  function selectBaseStatToCompare(): BaseStat {
+    const baseStatId = Math.floor(Math.random() * 7) + 1;
+    switch (baseStatId) {
+      case 1:
+        return 'hp';
+      case 2:
+        return 'attack';
+      case 3:
+        return 'defense';
+      case 4:
+        return 'specialAttack';
+      case 5:
+        return 'specialDefense';
+      case 6:
+        return 'speed';
+      case 7:
+        return 'total';
+      default:
+        return 'hp';
+    }
+  }
+
+  function guessPokemon(
+    firstPokemon: Pokemon,
+    secondPokemon: Pokemon,
+    baseStatToCompare: BaseStat,
+  ): boolean {
+    if (baseStatToCompare === 'total') {
+      if (firstPokemon.baseStatsTotal > secondPokemon.baseStatsTotal) {
+        setCorrectGuesses(correctGuesses + 1);
+        setGuessedPokemon(firstPokemon);
+        setCorrectPokemon(firstPokemon);
+        setIncorrectPokemon(secondPokemon);
+        return true;
+      }
+      setGuessedPokemon(firstPokemon);
+      setCorrectPokemon(secondPokemon);
+      setIncorrectPokemon(firstPokemon);
+      return false;
+    }
+    if (
+      firstPokemon.baseStats[
+        baseStatToCompare as keyof typeof firstPokemon.baseStats
+      ] >
+      secondPokemon.baseStats[
+        baseStatToCompare as keyof typeof secondPokemon.baseStats
+      ]
+    ) {
+      setCorrectGuesses(correctGuesses + 1);
+      setGuessedPokemon(firstPokemon);
+      setCorrectPokemon(firstPokemon);
+      setIncorrectPokemon(secondPokemon);
+      return true;
+    }
+    setGuessedPokemon(firstPokemon);
+    setCorrectPokemon(secondPokemon);
+    setIncorrectPokemon(firstPokemon);
+    return false;
+  }
+
+  useEffect(() => {
+    getTwoRandomPokemon();
+    getNextPokemon();
+    const baseStat = selectBaseStatToCompare();
+    console.log('Base stat:', baseStat);
+    setBaseStatToCompare(baseStat);
+  }, []);
+
+  if (!firstPokemon || !secondPokemon) {
+    return (
+      <div className='flex h-screen items-center justify-center'>
+        Loading...
+      </div>
+    );
+  }
+
+  return (
+    <div className='m-4 mt-[10vh] flex flex-col items-center justify-center'>
+      <h1 className='mb-8 text-center text-2xl font-bold'>
+        {`Which Pokémon has the higher ${baseStatToName[baseStatToCompare as BaseStat]}?`}
+
+        <br />
+        {`You've guessed correctly ${correctGuesses} in a row!`}
+      </h1>
+      <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
+        <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
+          {firstPokemon && <PokemonCard pokemon={firstPokemon} />}
+          <button
+            className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
+            onClick={() => {
+              guessPokemon(firstPokemon, secondPokemon, baseStatToCompare!);
+              setIsShowingAnswer(true);
+            }}
+            disabled={isShowingAnswer}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {`Obviously ${firstPokemon.name}!`}
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
+          {secondPokemon && <PokemonCard pokemon={secondPokemon} />}
+          <button
+            className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
+            onClick={() => {
+              guessPokemon(secondPokemon, firstPokemon, baseStatToCompare!);
+              setIsShowingAnswer(true);
+            }}
+            disabled={isShowingAnswer}
+          >
+            {`Obviously ${secondPokemon.name}`}
+          </button>
+        </div>
+      </div>
+      {isShowingAnswer && (
+        <div className='flex max-w-3xl flex-col items-center justify-center gap-4 text-center text-xl'>
+          {guessedPokemon?.id === correctPokemon?.id ? (
+            <>
+              <div>
+                {`Wow you must be a Pokémon Professor! (or incredibly autistic)`}
+                <br />
+                {`${guessedPokemon?.name} has ${baseStatToCompare === 'total' ? guessedPokemon?.baseStatsTotal : guessedPokemon?.baseStats[baseStatToCompare as keyof typeof guessedPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]} whereas ${incorrectPokemon?.name} has ${baseStatToCompare === 'total' ? incorrectPokemon?.baseStatsTotal : incorrectPokemon?.baseStats[baseStatToCompare as keyof typeof incorrectPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]}!`}
+              </div>
+              <button
+                className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
+                onClick={() => {
+                  resetGame();
+                }}
+              >
+                {`Play again?`}
+              </button>
+            </>
+          ) : (
+            <>
+              <div>
+                {`You absolute buffoon! You call yourself a Pokémon fan?`}
+                <br />
+                {`${guessedPokemon?.name} has only ${baseStatToCompare === 'total' ? guessedPokemon?.baseStatsTotal : guessedPokemon?.baseStats[baseStatToCompare as keyof typeof guessedPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]} whereas ${correctPokemon?.name} has ${baseStatToCompare === 'total' ? correctPokemon?.baseStatsTotal : correctPokemon?.baseStats[baseStatToCompare as keyof typeof correctPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]}!`}
+              </div>
+              <button
+                className='rounded-md bg-green-800 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
+                onClick={() => {
+                  resetGame();
+                }}
+              >
+                {`Play again?`}
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
