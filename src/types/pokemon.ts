@@ -3,7 +3,6 @@ export interface Pokemon {
   name: string;
   sprites: PokemonSprites;
   baseStats: BaseStats;
-  baseStatsTotal: number;
   firstType: string;
   secondType: string | null;
 }
@@ -15,6 +14,7 @@ export interface BaseStats {
   specialAttack: number;
   specialDefense: number;
   speed: number;
+  total: number;
 }
 
 export interface PokemonSprites {
