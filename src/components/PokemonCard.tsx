@@ -7,7 +7,11 @@ export function PokemonCard({ pokemon }: { pokemon: Pokemon }) {
         #{pokemon.id} {pokemon.name}
       </h1>
       <img
-        src={pokemon.sprites.front_default}
+        src={
+          pokemon.isShiny
+            ? pokemon.sprites.front_shiny
+            : pokemon.sprites.front_default
+        }
         alt={pokemon.name}
       />
     </div>

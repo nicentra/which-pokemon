@@ -106,6 +106,7 @@ export async function getPokemon(id: number): Promise<Pokemon> {
     secondType:
       data.pokemon_v2_pokemon[0].pokemon_v2_pokemontypes[1]?.pokemon_v2_type
         ?.name ?? null,
+    isShiny: Math.floor(Math.random() * 4096) + 1 === 4096,
   };
   console.log('Pokemon:', pokemon);
 

@@ -32,7 +32,7 @@ export default function Home() {
   const [guessedPokemon, setGuessedPokemon] = useState<Pokemon>();
   const [correctPokemon, setCorrectPokemon] = useState<Pokemon>();
   const [incorrectPokemon, setIncorrectPokemon] = useState<Pokemon>();
-  const [baseStatToCompare, setBaseStatToCompare] = useState<BaseStat>();
+  const [baseStatToCompare, setBaseStatToCompare] = useState<BaseStat>('hp');
   const [isShowingAnswer, setIsShowingAnswer] = useState<boolean>(false);
   const [correctGuesses, setCorrectGuesses] = useState<number>(0);
   const [guessedCorrectly, setGuessedCorrectly] = useState<boolean>(false);
@@ -109,12 +109,8 @@ export default function Home() {
     baseStatToCompare: BaseStat,
   ): boolean {
     if (
-      firstPokemon.baseStats[
-        baseStatToCompare as keyof typeof firstPokemon.baseStats
-      ] >=
-      secondPokemon.baseStats[
-        baseStatToCompare as keyof typeof secondPokemon.baseStats
-      ]
+      firstPokemon.baseStats[baseStatToCompare] >=
+      secondPokemon.baseStats[baseStatToCompare]
     ) {
       setCorrectGuesses(correctGuesses + 1);
       setGuessedCorrectly(true);
@@ -149,10 +145,10 @@ export default function Home() {
   return (
     <div className='m-4 mt-[10vh] flex flex-col items-center justify-center'>
       <h1 className='mb-8 text-center text-2xl font-bold'>
-        {`Which Pokémon has the higher ${baseStatToName[baseStatToCompare as BaseStat]}?`}
+        {`Which Pokémon has the higher ${baseStatToName[baseStatToCompare]}?`}
 
         <br />
-        {`You've guessed correctly ${correctGuesses} in a row!`}
+        {`You've guessed correctly ${correctGuesses} times in a row!${correctGuesses >= 20 ? ' Holy shit you are actually autistic' : correctGuesses >= 10 ? ' You are quite the Pokémon expert' : ''}`}
       </h1>
       <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
@@ -184,15 +180,11 @@ export default function Home() {
       </div>
       {isShowingAnswer && (
         <div className='flex max-w-3xl flex-col items-center justify-center gap-4 text-center text-xl'>
-          {firstPokemon.baseStats[
-            baseStatToCompare as keyof typeof firstPokemon.baseStats
-          ] ===
-          secondPokemon.baseStats[
-            baseStatToCompare as keyof typeof secondPokemon.baseStats
-          ] ? (
+          {firstPokemon.baseStats[baseStatToCompare] ===
+          secondPokemon.baseStats[baseStatToCompare] ? (
             <>
               <div>
-                {`Well technically, ${firstPokemon.name} and ${secondPokemon.name} have the same ${baseStatToName[baseStatToCompare as BaseStat]} but we're counting that as a win for you!`}
+                {`Well technically, ${firstPokemon.name} and ${secondPokemon.name} have the same ${baseStatToName[baseStatToCompare]} but we're counting that as a win for you!`}
               </div>
               <button
                 className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
@@ -208,7 +200,7 @@ export default function Home() {
               <div>
                 {`Wow you must be a Pokémon Professor! (or incredibly autistic)`}
                 <br />
-                {`${guessedPokemon?.name} has ${guessedPokemon?.baseStats[baseStatToCompare as keyof typeof guessedPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]} whereas ${incorrectPokemon?.name} has ${incorrectPokemon?.baseStats[baseStatToCompare as keyof typeof incorrectPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]}!`}
+                {`${guessedPokemon?.name} has ${guessedPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${incorrectPokemon?.name} has ${incorrectPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
               </div>
               <button
                 className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
@@ -224,7 +216,7 @@ export default function Home() {
               <div>
                 {`You absolute buffoon! You call yourself a Pokémon fan?`}
                 <br />
-                {`${guessedPokemon?.name} has only ${guessedPokemon?.baseStats[baseStatToCompare as keyof typeof guessedPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]} whereas ${correctPokemon?.name} has ${correctPokemon?.baseStats[baseStatToCompare as keyof typeof correctPokemon.baseStats]} ${baseStatToName[baseStatToCompare as BaseStat]}!`}
+                {`${guessedPokemon?.name} has only ${guessedPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${correctPokemon?.name} has ${correctPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
               </div>
               <button
                 className='rounded-md bg-green-800 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'

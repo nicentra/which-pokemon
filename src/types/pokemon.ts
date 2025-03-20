@@ -5,6 +5,7 @@ export interface Pokemon {
   baseStats: BaseStats;
   firstType: string;
   secondType: string | null;
+  isShiny: boolean;
 }
 
 export interface BaseStats {
