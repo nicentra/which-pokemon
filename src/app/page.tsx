@@ -67,7 +67,9 @@ export default function Home() {
   }
 
   async function resetGame() {
-    !guessedCorrectly ? setCorrectGuesses(0) : null;
+    if (!guessedCorrectly) {
+      setCorrectGuesses(0);
+    }
     setIsShowingAnswer(false);
     setGuessedPokemon(undefined);
     setCorrectPokemon(undefined);
