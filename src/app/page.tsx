@@ -108,10 +108,7 @@ export default function Home() {
     secondPokemon: Pokemon,
     baseStatToCompare: BaseStat,
   ): boolean {
-    if (
-      firstPokemon.baseStats[baseStatToCompare] >=
-      secondPokemon.baseStats[baseStatToCompare]
-    ) {
+    if (firstPokemon[baseStatToCompare] >= secondPokemon[baseStatToCompare]) {
       setCorrectGuesses(correctGuesses + 1);
       setGuessedCorrectly(true);
       setGuessedPokemon(firstPokemon);
@@ -180,8 +177,8 @@ export default function Home() {
       </div>
       {isShowingAnswer && (
         <div className='flex max-w-3xl flex-col items-center justify-center gap-4 text-center text-xl'>
-          {firstPokemon.baseStats[baseStatToCompare] ===
-          secondPokemon.baseStats[baseStatToCompare] ? (
+          {firstPokemon[baseStatToCompare] ===
+          secondPokemon[baseStatToCompare] ? (
             <>
               <div>
                 {`Well technically, ${firstPokemon.name} and ${secondPokemon.name} have the same ${baseStatToName[baseStatToCompare]} but we're counting that as a win for you!`}
@@ -200,7 +197,7 @@ export default function Home() {
               <div>
                 {`Wow you must be a Pokémon Professor! (or incredibly autistic)`}
                 <br />
-                {`${guessedPokemon?.name} has ${guessedPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${incorrectPokemon?.name} has ${incorrectPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
+                {`${guessedPokemon?.name} has ${guessedPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${incorrectPokemon?.name} has ${incorrectPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
               </div>
               <button
                 className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
@@ -216,7 +213,7 @@ export default function Home() {
               <div>
                 {`You absolute buffoon! You call yourself a Pokémon fan?`}
                 <br />
-                {`${guessedPokemon?.name} has only ${guessedPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${correctPokemon?.name} has ${correctPokemon?.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
+                {`${guessedPokemon?.name} has only ${guessedPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${correctPokemon?.name} has ${correctPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
               </div>
               <button
                 className='rounded-md bg-green-800 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'

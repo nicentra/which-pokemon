@@ -84,22 +84,20 @@ export async function getPokemon(id: number): Promise<Pokemon> {
     id: data.pokemon_v2_pokemon[0].id,
     name: pokemonName,
     sprites: data.pokemon_v2_pokemon[0].pokemon_v2_pokemonsprites[0].sprites,
-    baseStats: {
-      ...data.pokemon_v2_pokemon[0].pokemon_v2_pokemonstats.reduce(
-        (acc, stat) => ({
-          ...acc,
-          [stat.pokemon_v2_stat.name === 'special-attack'
-            ? 'specialAttack'
-            : stat.pokemon_v2_stat.name === 'special-defense'
-              ? 'specialDefense'
-              : stat.pokemon_v2_stat.name]: stat.base_stat,
-        }),
-        {} as BaseStats,
-      ),
-      total:
-        data.pokemon_v2_pokemon[0].pokemon_v2_pokemonstats_aggregate.aggregate
-          .sum.base_stat,
-    },
+    ...data.pokemon_v2_pokemon[0].pokemon_v2_pokemonstats.reduce(
+      (acc, stat) => ({
+        ...acc,
+        [stat.pokemon_v2_stat.name === 'special-attack'
+          ? 'specialAttack'
+          : stat.pokemon_v2_stat.name === 'special-defense'
+            ? 'specialDefense'
+            : stat.pokemon_v2_stat.name]: stat.base_stat,
+      }),
+      {} as BaseStats,
+    ),
+    total:
+      data.pokemon_v2_pokemon[0].pokemon_v2_pokemonstats_aggregate.aggregate.sum
+        .base_stat,
     firstType:
       data.pokemon_v2_pokemon[0].pokemon_v2_pokemontypes[0].pokemon_v2_type
         .name,

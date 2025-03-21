@@ -1,10 +1,16 @@
 export interface Pokemon {
   id: number;
   name: string;
-  sprites: PokemonSprites;
-  baseStats: BaseStats;
   firstType: string;
   secondType: string | null;
+  hp: number;
+  attack: number;
+  defense: number;
+  specialAttack: number;
+  specialDefense: number;
+  speed: number;
+  total: number;
+  sprites: PokemonSprites;
   isShiny: boolean;
 }
 
