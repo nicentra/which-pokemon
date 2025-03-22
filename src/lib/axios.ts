@@ -2,21 +2,29 @@ import axios from 'axios';
 import { tryCatch } from '../utils/try-catch';
 import { Pokemon } from '@/types/pokemon';
 
-export const api = axios.create({});
+export const api = axios.create({
+  baseURL: '/api',
+});
 
 export async function getPokemon(
-  dexId: number,
+  firstDexId: number,
+  secondDexId: number,
   shinyChance: number = 4096,
-): Promise<Pokemon> {
-  console.log('Fetching pokemon with id:', dexId);
+): Promise<{ firstPokemon: Pokemon; secondPokemon: Pokemon }> {
+  console.log('Fetching pokemon with id:', firstDexId, secondDexId);
 
   const result = await tryCatch(
-    api.get(`/api/pokemon/${dexId}?shinyChance=${shinyChance}`),
+    api.get(
+      `/pokemon/two-pokemon?firstDexId=${firstDexId}&secondDexId=${secondDexId}&shinyChance=${shinyChance}`,
+    ),
   );
 
   if (result.error) {
     throw result.error;
   }
 
-  return result.data.data as Pokemon;
+  return result.data.data as {
+    firstPokemon: Pokemon;
+    secondPokemon: Pokemon;
+  };
 }

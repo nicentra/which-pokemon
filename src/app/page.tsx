@@ -45,24 +45,30 @@ export default function Home() {
 
   async function getTwoRandomPokemon() {
     const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
-    const firstPokemon = await tryCatch(getPokemon(firstNumber, shinyChance));
-    const secondPokemon = await tryCatch(getPokemon(secondNumber, shinyChance));
-    if (firstPokemon.error || secondPokemon.error) {
-      console.error(firstPokemon.error, secondPokemon.error);
+    const apiResponse = await tryCatch(
+      getPokemon(firstNumber, secondNumber, shinyChance),
+    );
+    if (apiResponse.error) {
+      console.error(apiResponse.error);
       throw new Error('Error fetching pokemon');
     }
-    setPokemon([firstPokemon.data, secondPokemon.data]);
+
+    const { firstPokemon, secondPokemon } = apiResponse.data;
+
+    setPokemon([firstPokemon, secondPokemon]);
   }
 
   async function getNextPokemon() {
     const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
-    const firstPokemon = await tryCatch(getPokemon(firstNumber, shinyChance));
-    const secondPokemon = await tryCatch(getPokemon(secondNumber, shinyChance));
-    if (firstPokemon.error || secondPokemon.error) {
-      console.error(firstPokemon.error, secondPokemon.error);
+    const apiResponse = await tryCatch(
+      getPokemon(firstNumber, secondNumber, shinyChance),
+    );
+    if (apiResponse.error) {
+      console.error(apiResponse.error);
       throw new Error('Error fetching pokemon');
     }
-    setNextPokemon([firstPokemon.data, secondPokemon.data]);
+    const { firstPokemon, secondPokemon } = apiResponse.data;
+    setNextPokemon([firstPokemon, secondPokemon]);
   }
 
   async function resetGame() {
