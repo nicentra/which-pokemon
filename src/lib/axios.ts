@@ -14,9 +14,13 @@ export async function getPokemon(
   console.log('Fetching pokemon with id:', firstDexId, secondDexId);
 
   const result = await tryCatch(
-    api.get(
-      `/pokemon/two-pokemon?firstDexId=${firstDexId}&secondDexId=${secondDexId}&shinyChance=${shinyChance}`,
-    ),
+    api.get('/pokemon/two-pokemon', {
+      params: {
+        firstDexId,
+        secondDexId,
+        shinyChance,
+      },
+    }),
   );
 
   if (result.error) {
