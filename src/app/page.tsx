@@ -1,7 +1,7 @@
 'use client';
 
 import { Pokemon } from '@/types/pokemon';
-import { getPokemon } from '@/utils/axios';
+import { getPokemon } from '@/lib/axios';
 import { tryCatch } from '@/utils/try-catch';
 import { useState, useEffect } from 'react';
 import { PokemonCard } from '@/components/PokemonCard';
@@ -26,9 +26,9 @@ const baseStatToName = {
 };
 
 export default function Home() {
-  const [firstPokemon, setFirstPokemon] = useState<Pokemon>();
-  const [secondPokemon, setSecondPokemon] = useState<Pokemon>();
+  const [pokemon, setPokemon] = useState<Pokemon[]>([]);
   const [nextPokemon, setNextPokemon] = useState<Pokemon[]>([]);
+  const [shinyChance, setShinyChance] = useState<number>(4096);
   const [guessedPokemon, setGuessedPokemon] = useState<Pokemon>();
   const [correctPokemon, setCorrectPokemon] = useState<Pokemon>();
   const [incorrectPokemon, setIncorrectPokemon] = useState<Pokemon>();
@@ -45,20 +45,19 @@ export default function Home() {
 
   async function getTwoRandomPokemon() {
     const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
-    const firstPokemon = await tryCatch(getPokemon(firstNumber));
-    const secondPokemon = await tryCatch(getPokemon(secondNumber));
+    const firstPokemon = await tryCatch(getPokemon(firstNumber, shinyChance));
+    const secondPokemon = await tryCatch(getPokemon(secondNumber, shinyChance));
     if (firstPokemon.error || secondPokemon.error) {
       console.error(firstPokemon.error, secondPokemon.error);
       throw new Error('Error fetching pokemon');
     }
-    setFirstPokemon(firstPokemon.data);
-    setSecondPokemon(secondPokemon.data);
+    setPokemon([firstPokemon.data, secondPokemon.data]);
   }
 
   async function getNextPokemon() {
     const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
-    const firstPokemon = await tryCatch(getPokemon(firstNumber));
-    const secondPokemon = await tryCatch(getPokemon(secondNumber));
+    const firstPokemon = await tryCatch(getPokemon(firstNumber, shinyChance));
+    const secondPokemon = await tryCatch(getPokemon(secondNumber, shinyChance));
     if (firstPokemon.error || secondPokemon.error) {
       console.error(firstPokemon.error, secondPokemon.error);
       throw new Error('Error fetching pokemon');
@@ -74,8 +73,7 @@ export default function Home() {
     setGuessedPokemon(undefined);
     setCorrectPokemon(undefined);
     setIncorrectPokemon(undefined);
-    setFirstPokemon(nextPokemon[0]);
-    setSecondPokemon(nextPokemon[1]);
+    setPokemon([...nextPokemon]);
     getNextPokemon();
     const baseStat = selectBaseStatToCompare();
     setBaseStatToCompare(baseStat);
@@ -131,7 +129,7 @@ export default function Home() {
     setBaseStatToCompare(baseStat);
   }, []);
 
-  if (!firstPokemon || !secondPokemon) {
+  if (!pokemon[0] || !pokemon[1]) {
     return (
       <div className='flex h-screen items-center justify-center'>
         Loading...
@@ -149,39 +147,38 @@ export default function Home() {
       </h1>
       <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
-          {firstPokemon && <PokemonCard pokemon={firstPokemon} />}
+          {pokemon[0] && <PokemonCard pokemon={pokemon[0]} />}
           <button
             className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
             onClick={() => {
-              guessPokemon(firstPokemon, secondPokemon, baseStatToCompare!);
+              guessPokemon(pokemon[0], pokemon[1], baseStatToCompare!);
               setIsShowingAnswer(true);
             }}
             disabled={isShowingAnswer}
           >
-            {`Obviously ${firstPokemon.name}!`}
+            {`Obviously ${pokemon[0].name}!`}
           </button>
         </div>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
-          {secondPokemon && <PokemonCard pokemon={secondPokemon} />}
+          {pokemon[1] && <PokemonCard pokemon={pokemon[1]} />}
           <button
             className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
             onClick={() => {
-              guessPokemon(secondPokemon, firstPokemon, baseStatToCompare!);
+              guessPokemon(pokemon[1], pokemon[0], baseStatToCompare!);
               setIsShowingAnswer(true);
             }}
             disabled={isShowingAnswer}
           >
-            {`Obviously ${secondPokemon.name}!`}
+            {`Obviously ${pokemon[1].name}!`}
           </button>
         </div>
       </div>
       {isShowingAnswer && (
         <div className='flex max-w-3xl flex-col items-center justify-center gap-4 text-center text-xl'>
-          {firstPokemon[baseStatToCompare] ===
-          secondPokemon[baseStatToCompare] ? (
+          {pokemon[0][baseStatToCompare] === pokemon[1][baseStatToCompare] ? (
             <>
               <div>
-                {`Well technically, ${firstPokemon.name} and ${secondPokemon.name} have the same ${baseStatToName[baseStatToCompare]} but we're counting that as a win for you!`}
+                {`Well technically, ${pokemon[0].name} and ${pokemon[1].name} have the same ${baseStatToName[baseStatToCompare]} but we're counting that as a win for you!`}
               </div>
               <button
                 className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'

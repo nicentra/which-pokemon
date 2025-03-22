@@ -1,8 +1,7 @@
 export interface Pokemon {
   id: number;
   name: string;
-  firstType: string;
-  secondType: string | null;
+  types: string[];
   hp: number;
   attack: number;
   defense: number;
@@ -11,7 +10,19 @@ export interface Pokemon {
   speed: number;
   total: number;
   sprites: PokemonSprites;
+  moves?: Move[];
+  abilities?: Ability[];
   isShiny: boolean;
+}
+
+export interface Ability {
+  name: string;
+  isHidden: boolean;
+}
+
+export interface Move {
+  name: string;
+  learnMethod: string;
 }
 
 export interface BaseStats {

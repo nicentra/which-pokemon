@@ -10,5 +10,47 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("NEXT_NEXT_PRISMA_DATABASE_URL")
+  url      = env("DATABASE_URL")
+}
+
+model Pokemon {
+  id Int @id @default(autoincrement())
+  dexId Int
+  name String
+  types String[]
+  hp Int
+  attack Int
+  defense Int
+  specialAttack Int
+  specialDefense Int
+  speed Int
+  total Int
+  sprites PokemonSprites[]
+  moves Move[]
+  abilities Ability[]
+}
+
+model PokemonSprites {
+  id Int @id @default(autoincrement())
+  pokemonId Int
+  sprite String
+  pokemon Pokemon @relation(fields: [pokemonId], references: [id])
+}
+
+model Move {
+  id Int @id @default(autoincrement())
+  moveId Int
+  pokemonId Int
+  name String
+  learnMethod String
+  pokemon Pokemon @relation(fields: [pokemonId], references: [id])
+}
+
+model Ability {
+  id Int @id @default(autoincrement())
+  abilityId Int
+  pokemonId Int
+  name String
+  isHidden Boolean
+  pokemon Pokemon @relation(fields: [pokemonId], references: [id])
 }

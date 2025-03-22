@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log:
+    process.env.NODE_ENV === 'development'
+      ? ['query', 'error', 'warn']
+      : ['error'],
+});
 
 async function main() {
   // ... you will write your Prisma Client queries here
@@ -15,3 +20,5 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
+
+export { prisma as db };
