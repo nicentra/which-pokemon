@@ -1,31 +1,25 @@
-export interface Pokemon {
+export type Pokemon = {
   id: number;
   name: string;
   types: string[];
-  hp: number;
-  attack: number;
-  defense: number;
-  specialAttack: number;
-  specialDefense: number;
-  speed: number;
-  total: number;
+  baseStats: BaseStats;
   sprites: PokemonSprites;
   moves?: Move[];
   abilities?: Ability[];
-  isShiny: boolean;
-}
+  isShiny?: boolean;
+};
 
-export interface Ability {
+export type Ability = {
   name: string;
   isHidden: boolean;
-}
+};
 
-export interface Move {
+export type Move = {
   name: string;
   learnMethod: string;
-}
+};
 
-export interface BaseStats {
+export type BaseStats = {
   hp: number;
   attack: number;
   defense: number;
@@ -33,9 +27,11 @@ export interface BaseStats {
   specialDefense: number;
   speed: number;
   total: number;
-}
+};
 
-export interface PokemonSprites {
+export type BaseStat = keyof BaseStats;
+
+export type PokemonSprites = {
   front_default: string;
   front_shiny: string;
-}
+};

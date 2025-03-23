@@ -1,19 +1,11 @@
 'use client';
 
-import { Pokemon } from '@/types/pokemon';
-import { getPokemon } from '@/lib/axios';
+import { Pokemon, BaseStat } from '@/types/pokemon';
 import { tryCatch } from '@/utils/try-catch';
 import { useState, useEffect } from 'react';
 import { PokemonCard } from '@/components/PokemonCard';
-
-type BaseStat =
-  | 'hp'
-  | 'attack'
-  | 'defense'
-  | 'specialAttack'
-  | 'specialDefense'
-  | 'speed'
-  | 'total';
+import { getBaseStatQuiz, Difficulty, PokemonGeneration } from '@/lib/pokemon';
+import axios from 'axios';
 
 const baseStatToName = {
   hp: 'HP',
@@ -25,64 +17,114 @@ const baseStatToName = {
   total: 'Base Stat Total',
 };
 
+type GameState = {
+  pokemon: Pokemon[];
+  baseStatToCompare: BaseStat;
+  shinyChance: number;
+  difficulty: Difficulty;
+  selectedGenerations: PokemonGeneration[];
+  guessedPokemon: Pokemon | undefined;
+  correctPokemon: Pokemon | undefined;
+  incorrectPokemon: Pokemon | undefined;
+  isShowingAnswer: boolean;
+  correctGuesses: number;
+  guessedCorrectly: boolean;
+};
+
+type GetTwoRandomPokemonResponse = {
+  pokemon: Pokemon[];
+  baseStatToCompare: BaseStat;
+};
+
 export default function Home() {
-  const [pokemon, setPokemon] = useState<Pokemon[]>([]);
-  const [nextPokemon, setNextPokemon] = useState<Pokemon[]>([]);
-  const [shinyChance, setShinyChance] = useState<number>(4096);
-  const [guessedPokemon, setGuessedPokemon] = useState<Pokemon>();
-  const [correctPokemon, setCorrectPokemon] = useState<Pokemon>();
-  const [incorrectPokemon, setIncorrectPokemon] = useState<Pokemon>();
-  const [baseStatToCompare, setBaseStatToCompare] = useState<BaseStat>('hp');
-  const [isShowingAnswer, setIsShowingAnswer] = useState<boolean>(false);
-  const [correctGuesses, setCorrectGuesses] = useState<number>(0);
-  const [guessedCorrectly, setGuessedCorrectly] = useState<boolean>(false);
+  const [gameState, setGameState] = useState<GameState>({
+    pokemon: [],
+    baseStatToCompare: 'hp',
+    shinyChance: 4096,
+    difficulty: 'medium',
+    selectedGenerations: ['all'],
+    guessedPokemon: undefined,
+    correctPokemon: undefined,
+    incorrectPokemon: undefined,
+    isShowingAnswer: false,
+    correctGuesses: 0,
+    guessedCorrectly: false,
+  });
+  const [nextPokemon, setNextPokemon] = useState<GetTwoRandomPokemonResponse>({
+    pokemon: [],
+    baseStatToCompare: 'hp',
+  });
 
-  function getTwoRandonmNumbers(min: number, max: number) {
-    const firstNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    const secondNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    return { firstNumber, secondNumber };
-  }
-
-  async function getTwoRandomPokemon() {
-    const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
+  async function getTwoRandomPokemon(): Promise<GetTwoRandomPokemonResponse> {
+    const baseStatToCompare = selectBaseStatToCompare();
     const apiResponse = await tryCatch(
-      getPokemon(firstNumber, secondNumber, shinyChance),
+      axios.post('/api/pokemon/quiz', {
+        selectedGenerations: gameState.selectedGenerations,
+        baseStatToCompare: baseStatToCompare,
+        difficulty: gameState.difficulty,
+        shinyChance: gameState.shinyChance,
+      }),
     );
+
     if (apiResponse.error) {
       console.error(apiResponse.error);
       throw new Error('Error fetching pokemon');
     }
 
-    const { firstPokemon, secondPokemon } = apiResponse.data;
+    const { pokemon } = apiResponse.data.data;
 
-    setPokemon([firstPokemon, secondPokemon]);
+    return {
+      pokemon: pokemon,
+      baseStatToCompare: baseStatToCompare,
+    };
   }
 
-  async function getNextPokemon() {
-    const { firstNumber, secondNumber } = getTwoRandonmNumbers(1, 1025);
-    const apiResponse = await tryCatch(
-      getPokemon(firstNumber, secondNumber, shinyChance),
-    );
-    if (apiResponse.error) {
-      console.error(apiResponse.error);
+  async function initGame() {
+    const firstBatch = await tryCatch(getTwoRandomPokemon());
+
+    if (firstBatch.error) {
+      console.error(firstBatch.error);
       throw new Error('Error fetching pokemon');
     }
-    const { firstPokemon, secondPokemon } = apiResponse.data;
-    setNextPokemon([firstPokemon, secondPokemon]);
+
+    setGameState({
+      ...gameState,
+      pokemon: firstBatch.data.pokemon,
+      baseStatToCompare: firstBatch.data.baseStatToCompare,
+    });
+
+    const secondBatch = await tryCatch(getTwoRandomPokemon());
+
+    if (secondBatch.error) {
+      console.error(secondBatch.error);
+      throw new Error('Error fetching pokemon');
+    }
+
+    setNextPokemon(secondBatch.data);
   }
 
   async function resetGame() {
-    if (!guessedCorrectly) {
-      setCorrectGuesses(0);
+    setGameState({
+      ...gameState,
+      isShowingAnswer: false,
+      guessedPokemon: undefined,
+      correctPokemon: undefined,
+      incorrectPokemon: undefined,
+      pokemon: nextPokemon.pokemon,
+      baseStatToCompare: nextPokemon.baseStatToCompare,
+      correctGuesses: !gameState.guessedCorrectly
+        ? 0
+        : gameState.correctGuesses,
+    });
+
+    const nextBatch = await tryCatch(getTwoRandomPokemon());
+
+    if (nextBatch.error) {
+      console.error(nextBatch.error);
+      throw new Error('Error fetching pokemon');
     }
-    setIsShowingAnswer(false);
-    setGuessedPokemon(undefined);
-    setCorrectPokemon(undefined);
-    setIncorrectPokemon(undefined);
-    setPokemon([...nextPokemon]);
-    getNextPokemon();
-    const baseStat = selectBaseStatToCompare();
-    setBaseStatToCompare(baseStat);
+
+    setNextPokemon(nextBatch.data);
   }
 
   function selectBaseStatToCompare(): BaseStat {
@@ -112,30 +154,35 @@ export default function Home() {
     secondPokemon: Pokemon,
     baseStatToCompare: BaseStat,
   ): boolean {
-    if (firstPokemon[baseStatToCompare] >= secondPokemon[baseStatToCompare]) {
-      setCorrectGuesses(correctGuesses + 1);
-      setGuessedCorrectly(true);
-      setGuessedPokemon(firstPokemon);
-      setCorrectPokemon(firstPokemon);
-      setIncorrectPokemon(secondPokemon);
+    if (
+      firstPokemon.baseStats[baseStatToCompare] >=
+      secondPokemon.baseStats[baseStatToCompare]
+    ) {
+      setGameState({
+        ...gameState,
+        correctGuesses: gameState.correctGuesses + 1,
+        guessedCorrectly: true,
+        guessedPokemon: firstPokemon,
+        correctPokemon: firstPokemon,
+        incorrectPokemon: secondPokemon,
+      });
       return true;
     }
-    setGuessedPokemon(firstPokemon);
-    setCorrectPokemon(secondPokemon);
-    setIncorrectPokemon(firstPokemon);
-    setGuessedCorrectly(false);
+    setGameState({
+      ...gameState,
+      guessedPokemon: firstPokemon,
+      correctPokemon: secondPokemon,
+      incorrectPokemon: firstPokemon,
+      guessedCorrectly: false,
+    });
     return false;
   }
 
   useEffect(() => {
-    getTwoRandomPokemon();
-    getNextPokemon();
-    const baseStat = selectBaseStatToCompare();
-    console.log('Base stat:', baseStat);
-    setBaseStatToCompare(baseStat);
+    initGame();
   }, []);
 
-  if (!pokemon[0] || !pokemon[1]) {
+  if (!gameState.pokemon[0] || !gameState.pokemon[1]) {
     return (
       <div className='flex h-screen items-center justify-center'>
         Loading...
@@ -146,45 +193,64 @@ export default function Home() {
   return (
     <div className='m-4 mt-[10vh] flex flex-col items-center justify-center'>
       <h1 className='mb-8 text-center text-2xl font-bold'>
-        {`Which Pokémon has the higher ${baseStatToName[baseStatToCompare]}?`}
+        {`Which Pokémon has the higher ${baseStatToName[gameState.baseStatToCompare]}?`}
 
         <br />
-        {`You've guessed correctly ${correctGuesses} times in a row!${correctGuesses >= 20 ? ' Holy shit you are actually autistic' : correctGuesses >= 10 ? ' You are quite the Pokémon expert' : ''}`}
+        {`You've guessed correctly ${gameState.correctGuesses} times in a row!${gameState.correctGuesses >= 20 ? ' Holy shit you are actually autistic' : gameState.correctGuesses >= 10 ? ' You are quite the Pokémon expert' : ''}`}
       </h1>
       <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
-          {pokemon[0] && <PokemonCard pokemon={pokemon[0]} />}
+          {gameState.pokemon[0] && (
+            <PokemonCard pokemon={gameState.pokemon[0]} />
+          )}
           <button
             className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
             onClick={() => {
-              guessPokemon(pokemon[0], pokemon[1], baseStatToCompare!);
-              setIsShowingAnswer(true);
+              guessPokemon(
+                gameState.pokemon[0],
+                gameState.pokemon[1],
+                gameState.baseStatToCompare,
+              );
+              setGameState({
+                ...gameState,
+                isShowingAnswer: true,
+              });
             }}
-            disabled={isShowingAnswer}
+            disabled={gameState.isShowingAnswer}
           >
-            {`Obviously ${pokemon[0].name}!`}
+            {`Obviously ${gameState.pokemon[0].name}!`}
           </button>
         </div>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
-          {pokemon[1] && <PokemonCard pokemon={pokemon[1]} />}
+          {gameState.pokemon[1] && (
+            <PokemonCard pokemon={gameState.pokemon[1]} />
+          )}
           <button
             className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
             onClick={() => {
-              guessPokemon(pokemon[1], pokemon[0], baseStatToCompare!);
-              setIsShowingAnswer(true);
+              guessPokemon(
+                gameState.pokemon[1],
+                gameState.pokemon[0],
+                gameState.baseStatToCompare,
+              );
+              setGameState({
+                ...gameState,
+                isShowingAnswer: true,
+              });
             }}
-            disabled={isShowingAnswer}
+            disabled={gameState.isShowingAnswer}
           >
-            {`Obviously ${pokemon[1].name}!`}
+            {`Obviously ${gameState.pokemon[1].name}!`}
           </button>
         </div>
       </div>
-      {isShowingAnswer && (
+      {gameState.isShowingAnswer && (
         <div className='flex max-w-3xl flex-col items-center justify-center gap-4 text-center text-xl'>
-          {pokemon[0][baseStatToCompare] === pokemon[1][baseStatToCompare] ? (
+          {gameState.pokemon[0].baseStats[gameState.baseStatToCompare] ===
+          gameState.pokemon[1].baseStats[gameState.baseStatToCompare] ? (
             <>
               <div>
-                {`Well technically, ${pokemon[0].name} and ${pokemon[1].name} have the same ${baseStatToName[baseStatToCompare]} but we're counting that as a win for you!`}
+                {`Well technically, ${gameState.pokemon[0].name} and ${gameState.pokemon[1].name} have the same ${baseStatToName[gameState.baseStatToCompare]} but we're counting that as a win for you!`}
               </div>
               <button
                 className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
@@ -195,12 +261,12 @@ export default function Home() {
                 {`Play again?`}
               </button>
             </>
-          ) : guessedPokemon?.id === correctPokemon?.id ? (
+          ) : gameState.guessedPokemon?.id === gameState.correctPokemon?.id ? (
             <>
               <div>
                 {`Wow you must be a Pokémon Professor! (or incredibly autistic)`}
                 <br />
-                {`${guessedPokemon?.name} has ${guessedPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${incorrectPokemon?.name} has ${incorrectPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
+                {`${gameState.guessedPokemon?.name} has ${gameState.guessedPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]} whereas ${gameState.incorrectPokemon?.name} has ${gameState.incorrectPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]}!`}
               </div>
               <button
                 className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
@@ -216,7 +282,7 @@ export default function Home() {
               <div>
                 {`You absolute buffoon! You call yourself a Pokémon fan?`}
                 <br />
-                {`${guessedPokemon?.name} has only ${guessedPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${correctPokemon?.name} has ${correctPokemon?.[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}
+                {`${gameState.guessedPokemon?.name} has only ${gameState.guessedPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]} whereas ${gameState.correctPokemon?.name} has ${gameState.correctPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]}!`}
               </div>
               <button
                 className='rounded-md bg-green-800 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'

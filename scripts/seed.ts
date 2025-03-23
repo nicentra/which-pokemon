@@ -57,7 +57,7 @@ const client = new ApolloClient({
 
 const GET_POKEMON = gql`
   query GetAllPokemonQuery($minId: Int!, $maxId: Int!) {
-    pokemon_v2_pokemon(where: { id: { _gt: $minId, _lt: $maxId } }) {
+    pokemon_v2_pokemon(where: { id: { _gt: $minId, _lte: $maxId } }) {
       id
       name
       pokemon_v2_pokemonstats {
