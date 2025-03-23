@@ -4,8 +4,8 @@ import { Pokemon, BaseStat } from '@/types/pokemon';
 import { tryCatch } from '@/utils/try-catch';
 import { useState, useEffect } from 'react';
 import { PokemonCard } from '@/components/PokemonCard';
-import { getBaseStatQuiz, Difficulty, PokemonGeneration } from '@/lib/pokemon';
-import axios from 'axios';
+import { Difficulty, PokemonGeneration } from '@/lib/pokemon';
+import { api } from '@/lib/axios';
 
 const baseStatToName = {
   hp: 'HP',
@@ -23,9 +23,9 @@ type GameState = {
   shinyChance: number;
   difficulty: Difficulty;
   selectedGenerations: PokemonGeneration[];
-  guessedPokemon: Pokemon | undefined;
-  correctPokemon: Pokemon | undefined;
-  incorrectPokemon: Pokemon | undefined;
+  guessedPokemon?: Pokemon;
+  correctPokemon?: Pokemon;
+  incorrectPokemon?: Pokemon;
   isShowingAnswer: boolean;
   correctGuesses: number;
   guessedCorrectly: boolean;
@@ -43,9 +43,6 @@ export default function Home() {
     shinyChance: 4096,
     difficulty: 'medium',
     selectedGenerations: ['all'],
-    guessedPokemon: undefined,
-    correctPokemon: undefined,
-    incorrectPokemon: undefined,
     isShowingAnswer: false,
     correctGuesses: 0,
     guessedCorrectly: false,
@@ -58,7 +55,7 @@ export default function Home() {
   async function getTwoRandomPokemon(): Promise<GetTwoRandomPokemonResponse> {
     const baseStatToCompare = selectBaseStatToCompare();
     const apiResponse = await tryCatch(
-      axios.post('/api/pokemon/quiz', {
+      api.post('/pokemon/quiz', {
         selectedGenerations: gameState.selectedGenerations,
         baseStatToCompare: baseStatToCompare,
         difficulty: gameState.difficulty,
@@ -107,9 +104,6 @@ export default function Home() {
     setGameState({
       ...gameState,
       isShowingAnswer: false,
-      guessedPokemon: undefined,
-      correctPokemon: undefined,
-      incorrectPokemon: undefined,
       pokemon: nextPokemon.pokemon,
       baseStatToCompare: nextPokemon.baseStatToCompare,
       correctGuesses: !gameState.guessedCorrectly
@@ -153,7 +147,7 @@ export default function Home() {
     firstPokemon: Pokemon,
     secondPokemon: Pokemon,
     baseStatToCompare: BaseStat,
-  ): boolean {
+  ) {
     if (
       firstPokemon.baseStats[baseStatToCompare] >=
       secondPokemon.baseStats[baseStatToCompare]
@@ -165,17 +159,21 @@ export default function Home() {
         guessedPokemon: firstPokemon,
         correctPokemon: firstPokemon,
         incorrectPokemon: secondPokemon,
+        isShowingAnswer: true,
       });
-      return true;
+    } else {
+      setGameState({
+        ...gameState,
+        guessedPokemon: firstPokemon,
+        correctPokemon: secondPokemon,
+        incorrectPokemon: firstPokemon,
+        guessedCorrectly: false,
+        isShowingAnswer: true,
+      });
     }
-    setGameState({
-      ...gameState,
-      guessedPokemon: firstPokemon,
-      correctPokemon: secondPokemon,
-      incorrectPokemon: firstPokemon,
-      guessedCorrectly: false,
-    });
-    return false;
+    setTimeout(() => {
+      console.log(gameState);
+    }, 5000);
   }
 
   useEffect(() => {
@@ -211,10 +209,6 @@ export default function Home() {
                 gameState.pokemon[1],
                 gameState.baseStatToCompare,
               );
-              setGameState({
-                ...gameState,
-                isShowingAnswer: true,
-              });
             }}
             disabled={gameState.isShowingAnswer}
           >
@@ -233,10 +227,6 @@ export default function Home() {
                 gameState.pokemon[0],
                 gameState.baseStatToCompare,
               );
-              setGameState({
-                ...gameState,
-                isShowingAnswer: true,
-              });
             }}
             disabled={gameState.isShowingAnswer}
           >
