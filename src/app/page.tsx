@@ -4,8 +4,10 @@ import { Pokemon, BaseStat } from '@/types/pokemon';
 import { tryCatch } from '@/utils/try-catch';
 import { useState, useEffect } from 'react';
 import { PokemonCard } from '@/components/PokemonCard';
-import { Difficulty, PokemonGeneration } from '@/lib/pokemon';
 import { api } from '@/lib/axios';
+import { Button } from '@/components/ui/button';
+import { Card, CardFooter, CardContent } from '@/components/ui/card';
+import { useHydratedGameSettings } from '@/stores/gameSettingsStore';
 
 const baseStatToName = {
   hp: 'HP',
@@ -20,9 +22,6 @@ const baseStatToName = {
 type GameState = {
   pokemon: Pokemon[];
   baseStatToCompare: BaseStat;
-  shinyChance: number;
-  difficulty: Difficulty;
-  selectedGenerations: PokemonGeneration[];
   guessedPokemon?: Pokemon;
   correctPokemon?: Pokemon;
   incorrectPokemon?: Pokemon;
@@ -40,9 +39,6 @@ export default function Home() {
   const [gameState, setGameState] = useState<GameState>({
     pokemon: [],
     baseStatToCompare: 'hp',
-    shinyChance: 4096,
-    difficulty: 'medium',
-    selectedGenerations: ['all'],
     isShowingAnswer: false,
     correctGuesses: 0,
     guessedCorrectly: false,
@@ -51,15 +47,17 @@ export default function Home() {
     pokemon: [],
     baseStatToCompare: 'hp',
   });
+  const { difficulty, selectedGenerations, shinyChance, isHydrated } =
+    useHydratedGameSettings();
 
   async function getTwoRandomPokemon(): Promise<GetTwoRandomPokemonResponse> {
     const baseStatToCompare = selectBaseStatToCompare();
     const apiResponse = await tryCatch(
       api.post('/pokemon/quiz', {
-        selectedGenerations: gameState.selectedGenerations,
+        selectedGenerations: selectedGenerations,
         baseStatToCompare: baseStatToCompare,
-        difficulty: gameState.difficulty,
-        shinyChance: gameState.shinyChance,
+        difficulty: difficulty,
+        shinyChance: shinyChance,
       }),
     );
 
@@ -171,16 +169,13 @@ export default function Home() {
         isShowingAnswer: true,
       });
     }
-    setTimeout(() => {
-      console.log(gameState);
-    }, 5000);
   }
 
   useEffect(() => {
     initGame();
   }, []);
 
-  if (!gameState.pokemon[0] || !gameState.pokemon[1]) {
+  if (!gameState.pokemon[0] || !gameState.pokemon[1] || !isHydrated) {
     return (
       <div className='flex h-screen items-center justify-center'>
         Loading...
@@ -197,92 +192,107 @@ export default function Home() {
         {`You've guessed correctly ${gameState.correctGuesses} times in a row!${gameState.correctGuesses >= 20 ? ' Holy shit you are actually autistic' : gameState.correctGuesses >= 10 ? ' You are quite the Pokémon expert' : ''}`}
       </h1>
       <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
-        <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
+        <Card className='flex flex-col items-center justify-center gap-4'>
           {gameState.pokemon[0] && (
             <PokemonCard pokemon={gameState.pokemon[0]} />
           )}
-          <button
-            className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
-            onClick={() => {
-              guessPokemon(
-                gameState.pokemon[0],
-                gameState.pokemon[1],
-                gameState.baseStatToCompare,
-              );
-            }}
-            disabled={gameState.isShowingAnswer}
-          >
-            {`Obviously ${gameState.pokemon[0].name}!`}
-          </button>
-        </div>
-        <div className='flex flex-col items-center justify-center gap-4 rounded-xl bg-gray-800 p-4'>
+          <CardFooter>
+            <Button
+              className='font-bold'
+              variant='destructive'
+              onClick={() => {
+                guessPokemon(
+                  gameState.pokemon[0],
+                  gameState.pokemon[1],
+                  gameState.baseStatToCompare,
+                );
+              }}
+              disabled={gameState.isShowingAnswer}
+            >
+              {`Obviously ${gameState.pokemon[0].name}!`}
+            </Button>
+          </CardFooter>
+        </Card>
+        <Card className='flex flex-col items-center justify-center gap-4'>
           {gameState.pokemon[1] && (
             <PokemonCard pokemon={gameState.pokemon[1]} />
           )}
-          <button
-            className='rounded-md bg-red-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-red-600 disabled:opacity-50'
-            onClick={() => {
-              guessPokemon(
-                gameState.pokemon[1],
-                gameState.pokemon[0],
-                gameState.baseStatToCompare,
-              );
-            }}
-            disabled={gameState.isShowingAnswer}
-          >
-            {`Obviously ${gameState.pokemon[1].name}!`}
-          </button>
-        </div>
+          <CardFooter>
+            <Button
+              className='font-bold'
+              variant='destructive'
+              onClick={() => {
+                guessPokemon(
+                  gameState.pokemon[1],
+                  gameState.pokemon[0],
+                  gameState.baseStatToCompare,
+                );
+              }}
+              disabled={gameState.isShowingAnswer}
+            >
+              {`Obviously ${gameState.pokemon[1].name}!`}
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
       {gameState.isShowingAnswer && (
-        <div className='flex max-w-3xl flex-col items-center justify-center gap-4 text-center text-xl'>
+        <div className='flex flex-col items-center justify-center gap-4 text-center text-xl'>
           {gameState.pokemon[0].baseStats[gameState.baseStatToCompare] ===
           gameState.pokemon[1].baseStats[gameState.baseStatToCompare] ? (
-            <>
-              <div>
+            <Card className='flex flex-col items-center justify-center gap-4'>
+              <CardContent>
                 {`Well technically, ${gameState.pokemon[0].name} and ${gameState.pokemon[1].name} have the same ${baseStatToName[gameState.baseStatToCompare]} but we're counting that as a win for you!`}
-              </div>
-              <button
-                className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
-                onClick={() => {
-                  resetGame();
-                }}
-              >
-                {`Play again?`}
-              </button>
-            </>
+              </CardContent>
+              <CardFooter className='flex flex-col items-center justify-center gap-4'>
+                <Button
+                  className='font-bold'
+                  variant='accept'
+                  onClick={() => {
+                    resetGame();
+                  }}
+                >
+                  {`Play again?`}
+                </Button>
+              </CardFooter>
+            </Card>
           ) : gameState.guessedPokemon?.id === gameState.correctPokemon?.id ? (
-            <>
-              <div>
+            <Card className='flex flex-col items-center justify-center gap-4'>
+              <CardContent>
                 {`Wow you must be a Pokémon Professor! (or incredibly autistic)`}
                 <br />
                 {`${gameState.guessedPokemon?.name} has ${gameState.guessedPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]} whereas ${gameState.incorrectPokemon?.name} has ${gameState.incorrectPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]}!`}
-              </div>
-              <button
-                className='rounded-md bg-green-500 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
-                onClick={() => {
-                  resetGame();
-                }}
-              >
-                {`Play again?`}
-              </button>
-            </>
+              </CardContent>
+              <CardFooter className='flex flex-col items-center justify-center gap-4'>
+                <Button
+                  className='font-bold'
+                  variant='accept'
+                  onClick={() => {
+                    resetGame();
+                  }}
+                >
+                  {`Play again?`}
+                </Button>
+              </CardFooter>
+            </Card>
           ) : (
-            <>
-              <div>
+            <Card className='flex flex-col items-center justify-center gap-4'>
+              <CardContent>
                 {`You absolute buffoon! You call yourself a Pokémon fan?`}
                 <br />
                 {`${gameState.guessedPokemon?.name} has only ${gameState.guessedPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]} whereas ${gameState.correctPokemon?.name} has ${gameState.correctPokemon?.baseStats[gameState.baseStatToCompare]} ${baseStatToName[gameState.baseStatToCompare]}!`}
-              </div>
-              <button
-                className='rounded-md bg-green-800 px-4 py-2 font-bold text-white not-disabled:hover:bg-green-600 disabled:opacity-50'
-                onClick={() => {
-                  resetGame();
-                }}
-              >
-                {`Play again?`}
-              </button>
-            </>
+              </CardContent>
+              <CardFooter className='flex flex-col items-center justify-center gap-4'>
+                <Button
+                  className='font-bold'
+                  variant='accept'
+                  onClick={() => {
+                    resetGame();
+                  }}
+                >
+                  {`Play again?`}
+                </Button>
+              </CardFooter>
+            </Card>
           )}
         </div>
       )}

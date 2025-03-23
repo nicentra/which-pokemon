@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pokemon, PokemonSprites } from '@/types/pokemon';
 import { getBaseStatQuiz } from '@/lib/pokemon';
 import { tryCatch } from '@/utils/try-catch';
 
