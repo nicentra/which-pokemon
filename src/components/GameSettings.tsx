@@ -46,7 +46,7 @@ export function GameSettings() {
   };
 
   return (
-    <div className='flex flex-col gap-4'>
+    <>
       <div className='flex flex-col gap-4'>
         <Label>Select Difficulty</Label>
         <Select
@@ -132,6 +132,6 @@ export function GameSettings() {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

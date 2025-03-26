@@ -6,6 +6,7 @@ import './globals.css';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { GameSettings } from '@/components/GameSettings';
 import { GitHubLink } from '@/components/GitHubLink';
+import { LinkedinLink } from '@/components/LinkedinLink';
 import { ThemeProvider } from '@/components/theme-provider';
 
 const geistSans = Geist({
@@ -37,24 +38,22 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className='grid grid-cols-[15%_1fr_15%] grid-rows-[5%_1fr_5%] gap-x-2 gap-y-2 p-4'>
-            <div className='col-start-2 col-end-3 row-start-1 row-end-2 text-center text-2xl font-bold'>
-              Which Pokemon ...?
-            </div>
-            <div className='col-start-3 col-end-4 row-start-1 row-end-2 text-center text-2xl font-bold'>
-              <div className='flex flex-row-reverse'>
+          <div className='flex flex-wrap gap-4 p-4'>
+            <div className='order-none flex w-full flex-row gap-2'>
+              <div className='w-[15%]'></div>
+              <div className='grow text-center font-bold'>Which Pokemon ...?</div>
+              <div className='flex w-[15%] flex-row-reverse'>
                 <DarkModeToggle />
+                <LinkedinLink />
                 <GitHubLink />
               </div>
             </div>
-            <div className='col-start-1 col-end-2 row-start-2 row-end-3 flex flex-col items-center justify-center'></div>
-            <div className='col-start-2 col-end-3 row-start-2 row-end-3'>
-              {children}
-            </div>
-            <div className='col-start-3 col-end-4 row-start-2 row-end-3 flex flex-col items-center justify-center'>
+            <div className='order-1 h-3/4 w-[15%]'></div>
+            <div className='order-2 h-3/4'>{children}</div>
+            <div className='order-3 flex h-3/4 w-[15%] flex-col gap-2'>
               <GameSettings />
             </div>
-            <div className='col-start-1 col-end-2 row-start-3 row-end-4'></div>
+            <div className='order-4 h-3/4 w-full'></div>
           </div>
         </ThemeProvider>
       </body>

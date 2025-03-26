@@ -1,5 +1,7 @@
 import type { Pokemon } from '@/types/pokemon';
 
+import Image from 'next/image';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,7 +28,8 @@ export function PokemonCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <img
+        <Image
+          loader={({ src }) => src}
           src={
             pokemon.isShiny
               ? pokemon.sprites.front_shiny
@@ -34,6 +37,8 @@ export function PokemonCard({
           }
           alt={pokemon.name}
           className='size-72'
+          width={288}
+          height={288}
         />
       </CardContent>
       <CardFooter>

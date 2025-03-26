@@ -39,7 +39,7 @@ export function SolutionCard({
     );
 
   return (
-    <Card className='flex flex-col items-center justify-center gap-4'>
+    <Card className='flex max-w-lg flex-col items-center justify-center gap-4'>
       <CardContent>{cardContent}</CardContent>
       <CardFooter className='flex flex-col items-center justify-center gap-4'>
         <Button

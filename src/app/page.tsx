@@ -162,7 +162,7 @@ export default function Home() {
   }
 
   return (
-    <div className='m-4 mt-[10vh] flex flex-col items-center justify-center'>
+    <div className='m-4 mt-[10vh] flex shrink flex-col items-center justify-center'>
       <h1 className='mb-8 text-center text-2xl font-bold'>
         {`Which Pokémon has the higher ${baseStatToName[gameState.baseStatToCompare]}?`}
 
