@@ -1,12 +1,12 @@
 import { db } from '@/lib/db';
 import {
-  Pokemon,
-  PokemonSprites,
   BaseStats,
-  PokemonGeneration,
   Difficulty,
-  POKEMON_GENERATIONS,
   DIFFICULTY_BOUNDS,
+  Pokemon,
+  POKEMON_GENERATIONS,
+  PokemonGeneration,
+  PokemonSprites,
 } from '@/types/pokemon';
 
 /**
@@ -50,7 +50,7 @@ export async function getPokemonByBaseStat(
   firstPokemon: Pokemon,
   baseStatToCompare: keyof BaseStats,
   difficulty: Difficulty,
-  validDexIds: number[],
+  validDexIds: number[]
 ): Promise<Pokemon> {
   const { lower, upper } = DIFFICULTY_BOUNDS[difficulty];
 
@@ -79,8 +79,7 @@ export async function getPokemonByBaseStat(
     },
   });
 
-  const pokemon =
-    matchingPokemon[Math.floor(Math.random() * matchingPokemon.length)];
+  const pokemon = matchingPokemon[Math.floor(Math.random() * matchingPokemon.length)];
 
   return {
     id: pokemon.id,
@@ -102,10 +101,9 @@ export async function getPokemonByBaseStat(
   };
 }
 
-export async function getRandomPokemon(
-  validDexIds: number[],
-): Promise<Pokemon> {
+export async function getRandomPokemon(validDexIds: number[]): Promise<Pokemon> {
   const dexId = validDexIds[Math.floor(Math.random() * validDexIds.length)];
+
   return getPokemonByDexId(dexId);
 }
 
@@ -113,7 +111,7 @@ export async function getBaseStatQuiz(
   selectedGenerations: PokemonGeneration[],
   baseStatToCompare: keyof BaseStats,
   difficulty: Difficulty,
-  shinyChance: number,
+  shinyChance: number
 ): Promise<Pokemon[]> {
   if (selectedGenerations.length === 0) {
     throw new Error('No generations selected');
@@ -127,6 +125,7 @@ export async function getBaseStatQuiz(
 
     validDexIds.push(...dexIds);
   }
+
   const baseStatQuiz: Pokemon[] = [];
   const pokemon = await getRandomPokemon(validDexIds);
 
@@ -138,13 +137,18 @@ export async function getBaseStatQuiz(
     pokemon,
     baseStatToCompare,
     difficulty,
-    validDexIds,
+    validDexIds
   );
 
-  secondPokemon.isShiny =
-    Math.floor(Math.random() * shinyChance) + 1 === shinyChance;
+  secondPokemon.isShiny = Math.floor(Math.random() * shinyChance) + 1 === shinyChance;
 
   baseStatQuiz.push(secondPokemon);
 
-  return baseStatQuiz;
+  const randomIndex = Math.floor(Math.random() * baseStatQuiz.length);
+  const randomisedBaseStatQuiz = [
+    baseStatQuiz[randomIndex],
+    baseStatQuiz[randomIndex === 0 ? 1 : 0],
+  ];
+
+  return randomisedBaseStatQuiz;
 }

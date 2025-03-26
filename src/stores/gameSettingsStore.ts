@@ -1,6 +1,7 @@
-import { create } from 'zustand';
-import { PokemonGeneration, Difficulty } from '@/types/pokemon';
 import { useEffect } from 'react';
+import { create } from 'zustand';
+
+import { Difficulty, PokemonGeneration } from '@/types/pokemon';
 
 interface GameSettingsStore {
   difficulty: Difficulty;
@@ -20,6 +21,7 @@ const getStorageValue = <T>(key: string, defaultValue: T): T => {
   }
 
   const stored = localStorage.getItem(key);
+
   if (!stored) {
     return defaultValue;
   }
@@ -54,17 +56,7 @@ export const useGameSettingsStore = create<GameSettingsStore>((set) => ({
         difficulty: getStorageValue<Difficulty>('difficulty', 'medium'),
         selectedGenerations: getStorageValue<PokemonGeneration[]>(
           'selectedGenerations',
-          [
-            'gen1',
-            'gen2',
-            'gen3',
-            'gen4',
-            'gen5',
-            'gen6',
-            'gen7',
-            'gen8',
-            'gen9',
-          ],
+          ['gen1', 'gen2', 'gen3', 'gen4', 'gen5', 'gen6', 'gen7', 'gen8', 'gen9']
         ),
         shinyChance: getStorageValue<number>('shinyChance', 4096),
         isHydrated: true,
@@ -81,10 +73,7 @@ export const useGameSettingsStore = create<GameSettingsStore>((set) => ({
 
   setSelectedGenerations: (selectedGenerations) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(
-        'selectedGenerations',
-        JSON.stringify(selectedGenerations),
-      );
+      localStorage.setItem('selectedGenerations', JSON.stringify(selectedGenerations));
     }
     set({ selectedGenerations });
   },

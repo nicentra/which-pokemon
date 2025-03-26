@@ -1,14 +1,16 @@
 'use client';
 
-import type { Pokemon, BaseStat } from '@/types/pokemon';
-import { tryCatch } from '@/utils/try-catch';
-import { useState, useEffect, useCallback } from 'react';
+import type { GameState, GetTwoRandomPokemonResponse } from '@/types/gameState';
+import type { BaseStat, Pokemon } from '@/types/pokemon';
+
+import { useCallback, useEffect, useState } from 'react';
+
 import { PokemonCard } from '@/components/PokemonCard';
+import { SolutionCard } from '@/components/SolutionCard';
 import { api } from '@/lib/axios';
 import { useHydratedGameSettings } from '@/stores/gameSettingsStore';
-import type { GameState, GetTwoRandomPokemonResponse } from '@/types/gameState';
 import { baseStatToName } from '@/types/gameState';
-import { SolutionCard } from '@/components/SolutionCard';
+import { tryCatch } from '@/utils/try-catch';
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>({
@@ -25,77 +27,9 @@ export default function Home() {
   const { difficulty, selectedGenerations, shinyChance, isHydrated } =
     useHydratedGameSettings();
 
-  async function getTwoRandomPokemon(): Promise<GetTwoRandomPokemonResponse> {
-    const baseStatToCompare = selectBaseStatToCompare();
-    const apiResponse = await tryCatch(
-      api.post('/pokemon/quiz', {
-        selectedGenerations: selectedGenerations,
-        baseStatToCompare: baseStatToCompare,
-        difficulty: difficulty,
-        shinyChance: shinyChance,
-      }),
-    );
-
-    if (apiResponse.error) {
-      console.error(apiResponse.error);
-      throw new Error('Error fetching pokemon');
-    }
-
-    const { pokemon } = apiResponse.data.data;
-
-    return {
-      pokemon: pokemon,
-      baseStatToCompare: baseStatToCompare,
-    };
-  }
-
-  async function initGame() {
-    const firstBatch = await tryCatch(getTwoRandomPokemon());
-
-    if (firstBatch.error) {
-      console.error(firstBatch.error);
-      throw new Error('Error fetching pokemon');
-    }
-
-    setGameState({
-      ...gameState,
-      pokemon: firstBatch.data.pokemon,
-      baseStatToCompare: firstBatch.data.baseStatToCompare,
-    });
-
-    const secondBatch = await tryCatch(getTwoRandomPokemon());
-
-    if (secondBatch.error) {
-      console.error(secondBatch.error);
-      throw new Error('Error fetching pokemon');
-    }
-
-    setNextPokemon(secondBatch.data);
-  }
-
-  const resetGame = useCallback(async () => {
-    setGameState({
-      ...gameState,
-      isShowingAnswer: false,
-      pokemon: nextPokemon.pokemon,
-      baseStatToCompare: nextPokemon.baseStatToCompare,
-      correctGuesses: !gameState.guessedCorrectly
-        ? 0
-        : gameState.correctGuesses,
-    });
-
-    const nextBatch = await tryCatch(getTwoRandomPokemon());
-
-    if (nextBatch.error) {
-      console.error(nextBatch.error);
-      throw new Error('Error fetching pokemon');
-    }
-
-    setNextPokemon(nextBatch.data);
-  }, [gameState, nextPokemon]);
-
   function selectBaseStatToCompare(): BaseStat {
     const baseStatId = Math.floor(Math.random() * 7) + 1;
+
     switch (baseStatId) {
       case 1:
         return 'hp';
@@ -116,49 +50,115 @@ export default function Home() {
     }
   }
 
+  // Factory function to create getTwoRandomPokemon with current settings
+  const createGetTwoRandomPokemon = useCallback(() => {
+    return async function getTwoRandomPokemon(): Promise<GetTwoRandomPokemonResponse> {
+      const baseStatToCompare = selectBaseStatToCompare();
+      const apiResponse = await tryCatch(
+        api.post('/pokemon/quiz', {
+          selectedGenerations: selectedGenerations,
+          baseStatToCompare: baseStatToCompare,
+          difficulty: difficulty,
+          shinyChance: shinyChance,
+        })
+      );
+
+      if (apiResponse.error) {
+        console.error(apiResponse.error);
+        throw new Error('Error fetching pokemon');
+      }
+
+      const { pokemon } = apiResponse.data.data;
+
+      return {
+        pokemon: pokemon,
+        baseStatToCompare: baseStatToCompare,
+      };
+    };
+  }, [difficulty, selectedGenerations, shinyChance]);
+
+  const initGame = useCallback(async () => {
+    const getTwoRandomPokemon = createGetTwoRandomPokemon();
+
+    const firstBatch = await tryCatch(getTwoRandomPokemon());
+
+    if (firstBatch.error) {
+      console.error(firstBatch.error);
+      throw new Error('Error fetching pokemon');
+    }
+
+    setGameState((prevState) => ({
+      ...prevState,
+      pokemon: firstBatch.data.pokemon,
+      baseStatToCompare: firstBatch.data.baseStatToCompare,
+    }));
+
+    const secondBatch = await tryCatch(getTwoRandomPokemon());
+
+    if (secondBatch.error) {
+      console.error(secondBatch.error);
+      throw new Error('Error fetching pokemon');
+    }
+
+    setNextPokemon(secondBatch.data);
+  }, [createGetTwoRandomPokemon]);
+
+  const resetGame = useCallback(async () => {
+    const getTwoRandomPokemon = createGetTwoRandomPokemon();
+
+    setGameState((prevState) => ({
+      ...prevState,
+      isShowingAnswer: false,
+      pokemon: nextPokemon.pokemon,
+      baseStatToCompare: nextPokemon.baseStatToCompare,
+      correctGuesses: !prevState.guessedCorrectly ? 0 : prevState.correctGuesses,
+    }));
+
+    const nextBatch = await tryCatch(getTwoRandomPokemon());
+
+    if (nextBatch.error) {
+      console.error(nextBatch.error);
+      throw new Error('Error fetching pokemon');
+    }
+
+    setNextPokemon(nextBatch.data);
+  }, [nextPokemon, createGetTwoRandomPokemon]);
+
   const guessPokemon = useCallback(
-    (
-      firstPokemon: Pokemon,
-      secondPokemon: Pokemon,
-      baseStatToCompare: BaseStat,
-    ) => {
+    (firstPokemon: Pokemon, secondPokemon: Pokemon, baseStatToCompare: BaseStat) => {
       if (
         firstPokemon.baseStats[baseStatToCompare] >=
         secondPokemon.baseStats[baseStatToCompare]
       ) {
-        setGameState({
-          ...gameState,
-          correctGuesses: gameState.correctGuesses + 1,
+        setGameState((prevState) => ({
+          ...prevState,
+          correctGuesses: prevState.correctGuesses + 1,
           guessedCorrectly: true,
           guessedPokemon: firstPokemon,
           correctPokemon: firstPokemon,
           incorrectPokemon: secondPokemon,
           isShowingAnswer: true,
-        });
+        }));
       } else {
-        setGameState({
-          ...gameState,
+        setGameState((prevState) => ({
+          ...prevState,
           guessedPokemon: firstPokemon,
           correctPokemon: secondPokemon,
           incorrectPokemon: firstPokemon,
           guessedCorrectly: false,
           isShowingAnswer: true,
-        });
+        }));
       }
     },
-    [gameState],
+    []
   );
 
   useEffect(() => {
     initGame();
-  }, []);
+  }, [initGame]);
 
   if (!gameState.pokemon[0] || !gameState.pokemon[1] || !isHydrated) {
-    return (
-      <div className='flex h-screen items-center justify-center'>
-        Loading...
-      </div>
-    );
+    return <div className='flex h-screen items-center justify-center'>Loading...</div>;
   }
 
   return (
@@ -172,8 +172,9 @@ export default function Home() {
       <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
         {gameState.pokemon.map((p) => {
           const otherPokemon = gameState.pokemon.filter(
-            (pokemon) => pokemon.id !== p.id,
+            (pokemon) => pokemon.id !== p.id
           )[0];
+
           return (
             p && (
               <PokemonCard
@@ -202,8 +203,7 @@ export default function Home() {
                 variant='tie'
                 resetGame={resetGame}
               />
-            ) : gameState.guessedPokemon?.id ===
-              gameState.correctPokemon?.id ? (
+            ) : gameState.guessedPokemon?.id === gameState.correctPokemon?.id ? (
               <SolutionCard
                 guessedPokemon={gameState.guessedPokemon}
                 otherPokemon={gameState.incorrectPokemon}

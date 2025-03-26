@@ -1,7 +1,9 @@
+import { ApolloClient, gql, InMemoryCache } from '@apollo/client';
+import { Prisma } from '@prisma/client';
+
 import { db } from '@/lib/db';
 import { BaseStats } from '@/types/pokemon';
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
-import { Prisma } from '@prisma/client';
+
 export type PokemonData = {
   pokemon_v2_pokemon: {
     id: number;
@@ -108,12 +110,14 @@ const fetchPokemon = async (minId: number, maxId: number) => {
     query: GET_POKEMON,
     variables: { minId, maxId },
   });
+
   return data.pokemon_v2_pokemon;
 };
 
 const seedPokemon = async () => {
   for (let i = 0; i < 1025; i += 50) {
     console.log(`Fetching pokemon from ${i + 1} to ${i + 50}`);
+
     const pokemon = await fetchPokemon(i, i + 50);
     const pokemonData: Prisma.PokemonCreateInput[] = pokemon.map((p) => ({
       dexId: p.id,
@@ -131,7 +135,7 @@ const seedPokemon = async () => {
               ? 'specialDefense'
               : stat.pokemon_v2_stat.name]: stat.base_stat,
         }),
-        {} as BaseStats,
+        {} as BaseStats
       ),
       total: p.pokemon_v2_pokemonstats_aggregate.aggregate.sum.base_stat,
       sprites: {

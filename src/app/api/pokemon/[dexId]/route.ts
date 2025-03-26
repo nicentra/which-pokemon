@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pokemon, PokemonSprites } from '@/types/pokemon';
+
 import { db } from '@/lib/db';
+import { Pokemon, PokemonSprites } from '@/types/pokemon';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ dexId: string }> },
+  { params }: { params: Promise<{ dexId: string }> }
 ) {
   const { dexId } = await params;
   const searchParams = request.nextUrl.searchParams;

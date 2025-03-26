@@ -1,6 +1,7 @@
 import type { BaseStat, Pokemon } from '@/types/pokemon';
-import { CardContent, Card, CardFooter } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { baseStatToName } from '@/types/gameState';
 
 export function SolutionCard({
@@ -21,9 +22,7 @@ export function SolutionCard({
       `Well technically, ${guessedPokemon.name} and ${otherPokemon.name} have the same ${baseStatToName[baseStatToCompare]} but we're counting that as a win for you!`
     ) : variant === 'correct' ? (
       <>
-        <span>
-          {`Wow you must be a Pokémon Professor! (or incredibly autistic)`}
-        </span>
+        <span>{`Wow you must be a Pokémon Professor! (or incredibly autistic)`}</span>
         <br />
         <span>
           {`${guessedPokemon.name} has ${guessedPokemon.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]} whereas ${otherPokemon.name} has ${otherPokemon.baseStats[baseStatToCompare]} ${baseStatToName[baseStatToCompare]}!`}

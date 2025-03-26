@@ -1,8 +1,10 @@
 'use client';
 
-import { Button } from './ui/button';
 import { SiGithub } from '@icons-pack/react-simple-icons';
 import Link from 'next/link';
+
+import { Button } from './ui/button';
+
 export function GitHubLink() {
   return (
     <Button

@@ -1,4 +1,4 @@
-import { Pokemon, BaseStat } from './pokemon';
+import { BaseStat, Pokemon } from './pokemon';
 
 export const baseStatToName = {
   hp: 'HP',

@@ -1,6 +1,9 @@
 'use client';
 
-import { useHydratedGameSettings } from '@/stores/gameSettingsStore';
+import { RefreshCcw } from 'lucide-react';
+
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -8,16 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  PokemonGeneration,
-  POKEMON_GENERATIONS,
-  Difficulty,
-} from '@/types/pokemon';
+import { useHydratedGameSettings } from '@/stores/gameSettingsStore';
+import { Difficulty, POKEMON_GENERATIONS, PokemonGeneration } from '@/types/pokemon';
+
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { RefreshCcw } from 'lucide-react';
+
 export function GameSettings() {
   const {
     difficulty,
@@ -38,9 +37,7 @@ export function GameSettings() {
     setDifficulty(difficulty);
   };
 
-  const saveSelectedGenerations = (
-    selectedGenerations: PokemonGeneration[],
-  ) => {
+  const saveSelectedGenerations = (selectedGenerations: PokemonGeneration[]) => {
     setSelectedGenerations(selectedGenerations);
   };
 
@@ -80,14 +77,14 @@ export function GameSettings() {
                 if (selectedGenerations.includes(key as PokemonGeneration)) {
                   saveSelectedGenerations(
                     selectedGenerations.filter(
-                      (gen) => gen !== (key as PokemonGeneration),
-                    ),
+                      (gen) => gen !== (key as PokemonGeneration)
+                    )
                   );
                 } else {
                   saveSelectedGenerations(
-                    [...selectedGenerations, key as PokemonGeneration].sort(
-                      (a, b) => a.localeCompare(b),
-                    ),
+                    [...selectedGenerations, key as PokemonGeneration].sort((a, b) =>
+                      a.localeCompare(b)
+                    )
                   );
                 }
               }}
@@ -100,9 +97,7 @@ export function GameSettings() {
             variant='outline'
             onClick={() => {
               saveSelectedGenerations(
-                Object.keys(POKEMON_GENERATIONS).map(
-                  (key) => key as PokemonGeneration,
-                ),
+                Object.keys(POKEMON_GENERATIONS).map((key) => key as PokemonGeneration)
               );
             }}
           >
