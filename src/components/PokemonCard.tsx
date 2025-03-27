@@ -13,10 +13,12 @@ import {
 
 export function PokemonCard({
   pokemon,
+  nextPokemon,
   handleClick,
   isShowingAnswer,
 }: {
   pokemon: Pokemon;
+  nextPokemon?: Pokemon;
   handleClick: () => void;
   isShowingAnswer: boolean;
 }) {
@@ -28,6 +30,17 @@ export function PokemonCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {nextPokemon && (
+          <Image
+            hidden={true}
+            loader={({ src }) => src}
+            src={nextPokemon.sprites.front_default}
+            alt={nextPokemon.name}
+            className='size-72'
+            width={288}
+            height={288}
+          />
+        )}
         <Image
           loader={({ src }) => src}
           src={

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Fira_Code, Fira_Sans } from 'next/font/google';
 
 import './globals.css';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
@@ -9,13 +9,14 @@ import { GitHubLink } from '@/components/GitHubLink';
 import { LinkedinLink } from '@/components/LinkedinLink';
 import { ThemeProvider } from '@/components/theme-provider';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const firaSans = Fira_Sans({
+  variable: '--font-fira-sans',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const firaCode = Fira_Code({
+  variable: '--font-fira-code',
   subsets: ['latin'],
 });
 
@@ -31,29 +32,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
+      <body className={`${firaSans.variable} ${firaCode.variable} font-sans`}>
         <ThemeProvider
           attribute='class'
           defaultTheme='dark'
           enableSystem
           disableTransitionOnChange
         >
-          <div className='flex flex-wrap gap-4 p-4'>
-            <div className='order-none flex w-full flex-row gap-2'>
+          <div className='flex flex-col gap-4 p-4'>
+            <div className='flex w-full grow flex-row gap-2'>
               <div className='w-[15%]'></div>
-              <div className='grow text-center font-bold'>Which Pokemon ...?</div>
+              <h2 className='grow text-center font-bold'>Which Pokemon ...?</h2>
               <div className='flex w-[15%] flex-row-reverse'>
                 <DarkModeToggle />
                 <LinkedinLink />
                 <GitHubLink />
               </div>
             </div>
-            <div className='order-1 h-3/4 w-[15%]'></div>
-            <div className='order-2 h-3/4'>{children}</div>
-            <div className='order-3 flex h-3/4 w-[15%] flex-col gap-2'>
-              <GameSettings />
+            <div className='flex h-3/4 grow-18 flex-row gap-2'>
+              <div className='w-[10%]'></div>
+              <div className='w-[70%]'>{children}</div>
+              <div className='mt-16 flex w-[20%] flex-col gap-4'>
+                <GameSettings />
+              </div>
             </div>
-            <div className='order-4 h-3/4 w-full'></div>
+            <div className='h-3/4 w-full grow'></div>
           </div>
         </ThemeProvider>
       </body>

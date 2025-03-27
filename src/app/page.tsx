@@ -170,7 +170,7 @@ export default function Home() {
         {`You've guessed correctly ${gameState.correctGuesses} times in a row!${gameState.correctGuesses >= 20 ? ' Holy shit you are actually autistic' : gameState.correctGuesses >= 10 ? ' You are quite the Pokémon expert' : ''}`}
       </h1>
       <div className='mt-8 mb-8 flex flex-wrap justify-center gap-8'>
-        {gameState.pokemon.map((p) => {
+        {gameState.pokemon.map((p, i) => {
           const otherPokemon = gameState.pokemon.filter(
             (pokemon) => pokemon.id !== p.id
           )[0];
@@ -180,6 +180,7 @@ export default function Home() {
               <PokemonCard
                 key={p.id}
                 pokemon={p}
+                nextPokemon={nextPokemon.pokemon[i]}
                 handleClick={() => {
                   guessPokemon(p, otherPokemon, gameState.baseStatToCompare);
                 }}
