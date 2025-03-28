@@ -25,7 +25,7 @@ export function PokemonCard({
   return (
     <Card className='flex flex-col items-center justify-center gap-4'>
       <CardHeader className='w-full'>
-        <CardTitle className='text-center text-xl'>
+        <CardTitle className='scroll-m-20 text-center text-xl font-semibold tracking-tight'>
           #{pokemon.id} {pokemon.name}
         </CardTitle>
       </CardHeader>

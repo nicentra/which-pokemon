@@ -40,21 +40,21 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className='flex flex-col gap-4 p-4'>
-            <div className='flex w-full grow flex-row gap-2'>
-              <div className='w-[15%]'></div>
-              <h2 className='grow text-center font-bold'>Which Pokemon ...?</h2>
+            <div className='flex w-full grow flex-row gap-2 border-b'>
+              <div className='w-[15%]'>
+                <GameSettings />
+              </div>
+              <h2 className='grow scroll-m-20 pb-2 text-center text-3xl font-semibold tracking-tight first:mt-0'>
+                Which Pokemon ...?
+              </h2>
               <div className='flex w-[15%] flex-row-reverse'>
                 <DarkModeToggle />
                 <LinkedinLink />
                 <GitHubLink />
               </div>
             </div>
-            <div className='flex h-3/4 grow-18 flex-row gap-2'>
-              <div className='w-[10%]'></div>
-              <div className='w-[70%]'>{children}</div>
-              <div className='mt-16 flex w-[20%] flex-col gap-4'>
-                <GameSettings />
-              </div>
+            <div className='flex h-3/4 flex-row gap-2'>
+              <div className='w-full'>{children}</div>
             </div>
             <div className='h-3/4 w-full grow'></div>
           </div>
